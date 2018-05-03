@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+  <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+  <meta name="screen-orientation" content="landscape">
+  <style type="text/css">
+    body,
+    html,
+    #allmap {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      margin: 0;
+      font-family: "微软雅黑";
+    }
+
+    #but {
+      display: flex;
+      display: -webkit-flex;
+      /* Safari */
+      justify-content: space-between;
+      /*定义主轴对齐方式*/
+    }
+
+    tr {
+      background-color: #AEE
+    }
+
+    .BMap_mask {
+      height: 800px;
+    }
+  </style>
+  <script type="text/javascript" src="http://api.map.baidu.com/api?v=2.0&ak=T7cdCzLdLDiil0qoadn1uYGN9zixIbNG"></script>
+  <link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.css">
+  <script src="http://code.jquery.com/jquery-1.11.3.min.js"></script>
+  <script src="http://code.jquery.com/mobile/1.4.5/jquery.mobile-1.4.5.min.js"></script>
+</head>
+
+<body>
+  <div id="allmap" style="height:550px">
+  </div>
+  <div id="but" style="position:relative;text-align:center;height:50px;line-height:50px;">
+    <a id="but_retreat" href="#myretreat" data-rel="popup" class="ui-btn ui-btn-inline ui-corner-all" data-position-to="window" data-transition="pop" data-arrow="l" id="collect" style="width:10%">收藏</a>
+    <a id="but_camp" href="#mycamp" data-rel="popup" class="ui-btn ui-btn-inline ui-corner-all" data-position-to="but_camp" data-transition="pop" data-arrow="l" style="width:10%">兵营</a>
+    <a id="but_attack" href="#myattack" data-rel="popup" class="ui-btn ui-btn-inline ui-corner-all" data-position-to="window" data-transition="pop" data-arrow="l" id="begin_sub" style="width:10%">攻击</a>
+  </div>
+  <div data-role="popup" id="myretreat" class="ui-content" data-arrow="b">
+    <p>收藏成功</p>
+  </div>
+  <div data-role="popup" id="mycamp" class="ui-content" data-arrow="b">
+    <table id="myTable" cellpadding="7" cellspacing="6">
+      <thead>
+        <tr>
+          <th>兵种</th>
+          <th>数量</th>
+          <th>战斗力</th>
+        </tr>
+      </thead>
+      <tbody id="mytbody"></tbody>
+    </table>
+    <div data-role="content">
+      <form id="my_form">
+        <div data-role="fieldcontain">
+          <fieldset data-role="controlgroup" data-type="horizontal">
+            <legend>派遣兵力：</legend>
+            <label for="soldier_type">选择兵种：</label>
+            <select name="soldier_type" id="soldier_type">
+               <option>兵种</option>
+               </select>
+
+            <label for="soldier_num">选择数量：</label>
+            <select name="soldier_num" id="soldier_num">
+               <option>数量</option>
+               <option value="5">5</option>
+               <option value="10">10</option>
+               <option value="15">15</option>
+               </select>
+          </fieldset>
+        </div>
+        <input type="submit" data-inline="true" value="提交" id="submit_btn">
+      </form>
+    </div>
+
+  </div>
+  <div data-role="popup" id="myattack" class="ui-content" data-arrow="b">
+    <p>开始攻击</p>
+  </div>
+  <script>
+    $(function() {
+      if (!window.WebSocket) {
+        window.WebSocket = window.MozWebSocket;
+      }
+      if (window.WebSocket) {
+        var websocket = new WebSocket("ws://echo.websocket.org");
+        websocket.onopen = function() {
+          console.log("websocket open")
+        }
+        websocket.onclose = function() {
+          console.log("websocket close");
+        }
+        websocket.onmessage = function(e) {
+          console.log(e.data);
+        }
+        $("#submit_btn").click(function() {
+          var soldier_type = $("#soldier_type option:selected").val();
+          var soldier_num = $("#soldier_num option:selected").val();
+          websocket.send(soldier_num);
+            websocket.send(soldier_type);
+        })
+      }
+    });
+  </script>
+  <script type="text/javascript">
+    //横屏显示
+    $(window).on("orientationchange", function(event) {
+      //alert(event.orientation);
+      if (event.orientation == 'portrait') {
+        alert("横屏效果更佳")
+      } else if (event.orientation == 'landscape') {} else {
+        alert("error");
+      }
+    });
+  </script>
+</body>
+<script type="text/javascript">
+  // 百度地图API功能
+  var map = new BMap.Map("allmap"); //初始化地图
+  var map = new BMap.Map("allmap", {
+    enableHighResolution: true
+  }) //开启高度解析模式
+  var point = new BMap.Point(117.303829,39.065925); //创建点坐标（依据BMap命名空间下的Point类来创建一个坐标点）
+  map.centerAndZoom(point, 24); //设置中心点坐标和地图级别
+  //移动端所有操作是默认开启的
+  map.enableContinuousZoom(); // 开启连续缩放效果
+  map.enableInertialDragging();　 // 开启惯性拖拽效果
+  map.enableScrollWheelZoom();   //启用滚轮放大缩小，默认禁用
+/*
+  //在地图上随机添加10个堡垒
+  function buildingNum(){
+    function addMarker(point){
+      var marker=new BMap.Marker(point);
+      map.addOverlay(marker);
+    }
+  var bounds = map.getBounds(); //返回当前视口的西南纬度/经度和东北纬度/经度(定义了一个矩形)
+  //console.log(bounds);
+  var sw = bounds.getSouthWest(); //西南
+  var ne = bounds.getNorthEast(); //东北
+  var lngSpan = Math.abs(sw.lng - ne.lng); //矩形的长
+  var latSpan = Math.abs(ne.lat - sw.lat); //矩形的宽
+  for(i=0;i<10;i++){
+    var point=new BMap.Point(sw.lng+lngSpan*(Math.random()*0.7),ne.lat-latSpan*(Math.random()*0.7),ne.lat-latSpan*(Math.random()*0.7));
+    addMarker(point);
+  }
+};
+setTimeout('buildingNum()',2000);
+*/
+//添加标注和信息窗口
+var data_info = [[117.304162,39.064517,"地址：天津职业技术师范大学第一教学楼"],
+					 [117.304139,39.066415,"地址：天津职业技术师范大学西区第五教学楼"],
+					 [117.306946,39.062252,"地址：天津职业技术师范大学国际学院"],
+           [117.306946,39.062252,"地址：天津职业技术师范大学西区招生办公室"],
+           [117.305482,39.0655895,"地址：天津职业技术师范大学西区收发室"],
+           [117.303717,39.06589,"地址：天津职业技术师范大学西区小礼堂"],
+           [117.302033,39.066261,"地址：天津职业技术师范大学西区自动化西楼"],
+           [117.300456,39.066713,"地址：天津职业技术师范大学西区工程实训中心"]
+					];
+	var opts = {
+				width : 250,     // 信息窗口宽度
+				height: 80,     // 信息窗口高度
+				title : "碉堡" , // 信息窗口标题
+				enableMessage:true//设置允许信息窗发送短息
+			   };
+	for(var i=0;i<data_info.length;i++){
+		var marker = new BMap.Marker(new BMap.Point(data_info[i][0],data_info[i][1]));  // 创建标注
+		var content = data_info[i][2];
+		map.addOverlay(marker);               // 将标注添加到地图中
+		addClickHandler(content,marker);
+	}
+	function addClickHandler(content,marker){
+		marker.addEventListener("click",function(e){
+			openInfo(content,e)}
+		);
+	}
+	function openInfo(content,e){
+		var p = e.target;
+		var point = new BMap.Point(p.getPosition().lng, p.getPosition().lat);
+		var infoWindow = new BMap.InfoWindow(content,opts);  // 创建信息窗口对象
+		map.openInfoWindow(infoWindow,point); //开启信息窗口
+	}
+  //实时定位
+  /*
+  var geolocation = new BMap.Geolocation();
+  	geolocation.getCurrentPosition(function(r){
+  		if(this.getStatus() == BMAP_STATUS_SUCCESS){
+        window.setInterval(function(){
+          var mk = new BMap.Marker(r.point);
+          map.addOverlay(mk);
+          map.panTo(r.point);
+        //  alert('您的位置：'+r.point.lng+','+r.point.lat);
+        },2000);
+  		}
+  		else {
+  			alert('failed'+this.getStatus());
+  		}
+  	},{enableHighAccuracy: true})
+*/
+</script>
+
+</html>

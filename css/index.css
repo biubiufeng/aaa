@@ -1,0 +1,22 @@
+.my_input,.my_link{
+  display: inline-block;
+}
+.my_area_input{
+  border:1px solid red;
+  width: 50%;
+  margin-top: 10%;
+}
+.btn{
+  text-align: center;
+}
+.form-group{
+  display: -webkit-flex; /* Safari */
+ display: flex;
+ justify-content:center;
+}
+.my_link_regist{
+  float: right;
+}
+.clear{
+  clear:both;
+}
